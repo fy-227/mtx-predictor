@@ -9,74 +9,33 @@ html
   * { box-sizing: border-box; }
   body {
     font-family: -apple-system, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
-    max-width: 720px;
-    margin: 40px auto;
-    padding: 24px;
-    background: #f4f7fb;
-    color: #1a1a1a;
-    line-height: 1.6;
+    max-width: 760px; margin: 40px auto; padding: 24px;
+    background: #f4f7fb; color: #1a1a1a; line-height: 1.6;
   }
   h1 { font-size: 22px; margin-bottom: 4px; color: #0b3d91; }
   .subtitle { color: #666; font-size: 14px; margin-bottom: 24px; }
-  .card {
-    background: #fff;
-    border-radius: 12px;
-    padding: 24px;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
-    margin-bottom: 20px;
-  }
+  .card { background: #fff; border-radius: 12px; padding: 24px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06); margin-bottom: 20px; }
   label { display: block; margin: 14px 0 6px; font-weight: 600; font-size: 14px; }
-  input, select {
-    width: 100%;
-    padding: 10px 12px;
-    border: 1px solid #ccd6e0;
-    border-radius: 8px;
-    font-size: 15px;
-    transition: border-color 0.15s;
-  }
+  input, select { width: 100%; padding: 10px 12px;
+    border: 1px solid #ccd6e0; border-radius: 8px; font-size: 15px; }
   input:focus, select:focus { outline: none; border-color: #0b3d91; }
-  button {
-    margin-top: 20px;
-    width: 100%;
-    padding: 14px;
-    font-size: 16px;
-    font-weight: 700;
-    color: #fff;
-    background: #0b3d91;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: background 0.15s;
-  }
+  button { margin-top: 20px; width: 100%; padding: 14px; font-size: 16px;
+    font-weight: 700; color: #fff; background: #0b3d91; border: none;
+    border-radius: 8px; cursor: pointer; }
   button:hover { background: #08306b; }
-  #result {
-    margin-top: 20px;
-    padding: 20px;
-    border-radius: 10px;
-    font-size: 16px;
-    display: none;
-  }
+  #result { margin-top: 20px; padding: 20px; border-radius: 10px;
+    font-size: 16px; display: none; }
   .result-high { background: #fdecea; border-left: 6px solid #d73027; color: #7a0e0a; }
   .result-intermediate { background: #fff7e6; border-left: 6px solid #f0ad4e; color: #7a5200; }
   .result-low  { background: #e9f7ef; border-left: 6px solid #2e9e5b; color: #1b5e20; }
   .prob-number { font-size: 36px; font-weight: 800; margin: 4px 0 8px; }
   .note { font-size: 12px; color: #888; margin-top: 20px; }
-  .bar-container {
-    background: #e8edf2;
-    border-radius: 6px;
-    height: 12px;
-    margin-top: 12px;
-    overflow: hidden;
-    position: relative;
-  }
+  .bar-container { background: #e8edf2; border-radius: 6px; height: 12px;
+    margin-top: 12px; overflow: hidden; position: relative; }
   .bar-fill { height: 100%; transition: width 0.5s ease; }
-  .bar-cutoff {
-    position: absolute;
-    top: -4px;
-    width: 2px;
-    height: 20px;
-    background: #333;
-  }
+  .bar-cutoff { position: absolute; top: -4px; width: 2px; height: 20px; background: #333; }
+  .helper { font-size: 12px; color: #888; margin-top: 4px; }
 </style>
 </head>
 <body>
@@ -94,36 +53,46 @@ html
 
   <!-- D0 inputs -->
   <div id="inputs-D0">
-    <label>progesterone_d0 (ng/mL)</label>
+    <label>Serum progesterone at D0 (ng/mL)</label>
     <input id="prog" type="number" step="0.1" value="10">
 
-    <label>HCG at D0 (mIU/mL)</label>
+    <label>Serum β-hCG at D0 (mIU/mL)</label>
     <input id="hcg_d0" type="number" step="1" value="2000">
+    <div class="helper">log10 transformation is applied automatically.</div>
 
-    <label>mass.max.D0 (mm)</label>
+    <label>Maximum adnexal mass at D0 (mm)</label>
     <input id="mass_d0" type="number" step="0.1" value="25">
   </div>
 
   <!-- D4 inputs -->
   <div id="inputs-D4" style="display:none">
-    <label>HCG at D4 (mIU/mL)</label>
-    <input id="hcg_d4" type="number" step="1" value="1500">
+    <label>Serum β-hCG at D0 (mIU/mL)</label>
+    <input id="hcg_d0_d4" type="number" step="1" value="2000">
+    <div class="helper">Used to compute absolute HCG slope D0→D4.</div>
 
-    <label>mass.max.D4 (mm)</label>
+    <label>Serum β-hCG at D4 (mIU/mL)</label>
+    <input id="hcg_d4" type="number" step="1" value="1500">
+    <div class="helper">log10 and slope (HCG_D4 − HCG_D0)/4 are applied automatically.</div>
+
+    <label>Maximum adnexal mass at D4 (mm)</label>
     <input id="mass_d4" type="number" step="0.1" value="24">
   </div>
 
   <!-- D7 inputs -->
   <div id="inputs-D7" style="display:none">
-    <label>HCG at D7 (mIU/mL)</label>
-    <input id="hcg_d7" type="number" step="1" value="800">
+    <label>Serum β-hCG at D4 (mIU/mL)</label>
+    <input id="hcg_d4_d7" type="number" step="1" value="1500">
+    <div class="helper">Used to compute HCG ratio D4→D7.</div>
 
-    <label>mass.max.D7 (mm)</label>
+    <label>Serum β-hCG at D7 (mIU/mL)</label>
+    <input id="hcg_d7" type="number" step="1" value="800">
+    <div class="helper">log10 and ratio (HCG_D4 − HCG_D7)/HCG_D4 are applied automatically.</div>
+
+    <label>Maximum adnexal mass at D7 (mm)</label>
     <input id="mass_d7" type="number" step="0.1" value="22">
   </div>
 
   <button onclick="calc()">Calculate predicted failure probability</button>
-
   <div id="result"></div>
 </div>
 
@@ -134,7 +103,12 @@ html
 </div>
 
 <script>
-// ================ Model coefficients ================
+// ================================================================
+// MODEL COEFFICIENTS
+// D0: 3 variables (progesterone_d0, log10_hcg_d0, mass.max.D0)
+// D4: 3 variables (log10_hcg_d4, mass.max.D4, abs_slope_hcg_D0_D4)
+// D7: 3 variables (log10_hcg_d7, mass.max.D7, hcg_ratio_D4_D7)
+// ================================================================
 const models = {
   D0: {
     intercept: -12.9495320538088,
@@ -143,32 +117,29 @@ const models = {
       log10hcg: 3.18316029973376,
       mass: 0.0747321264930462
     },
-    cutoff: 0.322,
-    label: "D0"
+    cutoff: 0.322
   },
   D4: {
-    intercept: -15.3774636886808,
+    intercept: -10.144545491,
     coefs: {
-      log10hcg: 4.50675544177544,
-      mass: 0.0392732991148834
+      log10hcg: 2.392095483,
+      mass: 0.059461282,
+      absSlope: 0.009817622
     },
-    cutoff: 0.365,
-    label: "D4"
+    cutoff: 0.201
   },
   D7: {
-    intercept: -14.3981914729822,
+    intercept: -12.5090283,
     coefs: {
-      log10hcg: 4.10803616664796,
-      mass: 0.0395992680202606
+      log10hcg: 3.5588995,
+      mass: 0.0382556,
+      hcgRatio: -2.1101639
     },
-    cutoff: 0.169,
-    label: "D7"
+    cutoff: 0.103
   }
 };
 
-function log10(x) {
-  return Math.log10(x);
-}
+function log10(x) { return Math.log10(x); }
 
 function toggleInputs() {
   const t = document.getElementById("time").value;
@@ -182,35 +153,37 @@ function calc() {
   const m = models[t];
   const c = m.coefs;
 
-  const prog   = parseFloat(document.getElementById("prog").value)   || 0;
-  const hcg_d0 = parseFloat(document.getElementById("hcg_d0").value) || 0;
-  const hcg_d4 = parseFloat(document.getElementById("hcg_d4").value) || 0;
-  const hcg_d7 = parseFloat(document.getElementById("hcg_d7").value) || 0;
+  const prog    = parseFloat(document.getElementById("prog").value) || 0;
+  const hcg_d0  = parseFloat(document.getElementById("hcg_d0").value) || 0;
+  const hcg_d0_d4 = parseFloat(document.getElementById("hcg_d0_d4").value) || 0;
+  const hcg_d4  = parseFloat(document.getElementById("hcg_d4").value) || 0;
+  const hcg_d4_d7 = parseFloat(document.getElementById("hcg_d4_d7").value) || 0;
+  const hcg_d7  = parseFloat(document.getElementById("hcg_d7").value) || 0;
   const mass_d0 = parseFloat(document.getElementById("mass_d0").value) || 0;
   const mass_d4 = parseFloat(document.getElementById("mass_d4").value) || 0;
   const mass_d7 = parseFloat(document.getElementById("mass_d7").value) || 0;
 
-  let hcg_for_log = 0;
-  if (t === "D0") hcg_for_log = hcg_d0;
-  if (t === "D4") hcg_for_log = hcg_d4;
-  if (t === "D7") hcg_for_log = hcg_d7;
-
-  if (hcg_for_log <= 0) {
-    alert("HCG must be a positive number.");
-    return;
-  }
-
   let lp = m.intercept;
+
   if (t === "D0") {
+    if (hcg_d0 <= 0) { alert("HCG at D0 must be positive."); return; }
     lp += c.prog     * prog;
     lp += c.log10hcg * log10(hcg_d0);
     lp += c.mass     * mass_d0;
-  } else if (t === "D4") {
+  }
+  else if (t === "D4") {
+    if (hcg_d4 <= 0 || hcg_d0_d4 <= 0) { alert("Both HCG values must be positive."); return; }
+    const absSlope = (hcg_d4 - hcg_d0_d4) / 4;
     lp += c.log10hcg * log10(hcg_d4);
     lp += c.mass     * mass_d4;
-  } else if (t === "D7") {
+    lp += c.absSlope * absSlope;
+  }
+  else if (t === "D7") {
+    if (hcg_d7 <= 0 || hcg_d4_d7 <= 0) { alert("Both HCG values must be positive."); return; }
+    const hcgRatio = (hcg_d4_d7 - hcg_d7) / hcg_d4_d7;
     lp += c.log10hcg * log10(hcg_d7);
     lp += c.mass     * mass_d7;
+    lp += c.hcgRatio * hcgRatio;
   }
 
   const p = 1 / (1 + Math.exp(-lp));
@@ -218,16 +191,13 @@ function calc() {
 
   let cls, tier, advice;
   if (p >= m.cutoff) {
-    cls = "result-high";
-    tier = "High risk";
+    cls = "result-high"; tier = "High risk";
     advice = "Close monitoring recommended; consider a repeat MTX dose or surgical intervention.";
   } else if (p >= m.cutoff * 0.6) {
-    cls = "result-intermediate";
-    tier = "Intermediate risk";
+    cls = "result-intermediate"; tier = "Intermediate risk";
     advice = "Intensified monitoring recommended; re-evaluate HCG and adnexal mass.";
   } else {
-    cls = "result-low";
-    tier = "Low risk";
+    cls = "result-low"; tier = "Low risk";
     advice = "Routine follow-up recommended.";
   }
 
@@ -254,20 +224,3 @@ toggleInputs();
 </script>
 </body>
 </html>
-使用方式
-保存为 mtx_predictor.html。
-
-双击用浏览器打开。
-
-选择时间点（D0 / D4 / D7），填入参数，点 Calculate predicted failure probability。
-
-会显示：
-
-Predicted failure probability（0–100%）
-
-Risk stratification（Low / Intermediate / High）
-
-Recommendation
-
-概率条，黑色竖线为 Youden cutoff
-
