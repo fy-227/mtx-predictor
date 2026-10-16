@@ -2,185 +2,218 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MTX Treatment Failure Risk Predictor</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dynamic Prediction of MTX Treatment Failure in Ectopic Pregnancy</title>
 <style>
-body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 20px; background: #f5f5f5; }
-.container { max-width: 900px; margin: auto; background: #fff; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-h1 { text-align: center; color: #333; }
-.tabs { display: flex; border-bottom: 2px solid #ddd; margin-bottom: 20px; }
-.tab { padding: 12px 24px; cursor: pointer; background: #eee; border: none; font-size: 16px; }
-.tab.active { background: #1b9e77; color: #fff; }
-.panel { display: none; }
-.panel.active { display: block; }
-.form-group { margin-bottom: 15px; }
-label { display: block; margin-bottom: 5px; font-weight: bold; }
-input { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
-button { background: #1b9e77; color: #fff; padding: 12px 24px; border: none; border-radius: 5px; font-size: 16px; cursor: pointer; margin-top: 10px; }
-button:hover { background: #166b51; }
-.result { margin-top: 20px; padding: 15px; border-radius: 5px; font-size: 18px; font-weight: bold; }
-.high-risk { background: #f8d7da; color: #721c24; }
-.low-risk { background: #d4edda; color: #155724; }
-.note { font-size: 14px; color: #666; margin-top: 10px; }
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    max-width: 760px; margin: 40px auto; padding: 24px;
+    background: #f4f7fb; color: #1a1a1a; line-height: 1.6;
+  }
+  h1 { font-size: 22px; margin-bottom: 4px; color: #0b3d91; }
+  .subtitle { color: #666; font-size: 14px; margin-bottom: 24px; }
+  .card { background: #fff; border-radius: 12px; padding: 24px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06); margin-bottom: 20px; }
+  label { display: block; margin: 14px 0 6px; font-weight: 600; font-size: 14px; }
+  input, select { width: 100%; padding: 10px 12px;
+    border: 1px solid #ccd6e0; border-radius: 8px; font-size: 15px; }
+  input:focus, select:focus { outline: none; border-color: #0b3d91; }
+  button { margin-top: 20px; width: 100%; padding: 14px; font-size: 16px;
+    font-weight: 700; color: #fff; background: #0b3d91; border: none;
+    border-radius: 8px; cursor: pointer; }
+  button:hover { background: #08306b; }
+  #result { margin-top: 20px; padding: 20px; border-radius: 10px;
+    font-size: 16px; display: none; }
+  .result-high { background: #fdecea; border-left: 6px solid #d73027; color: #7a0e0a; }
+  .result-intermediate { background: #fff7e6; border-left: 6px solid #f0ad4e; color: #7a5200; }
+  .result-low  { background: #e9f7ef; border-left: 6px solid #2e9e5b; color: #1b5e20; }
+  .prob-number { font-size: 36px; font-weight: 800; margin: 4px 0 8px; }
+  .note { font-size: 12px; color: #888; margin-top: 20px; }
+  .bar-container { background: #e8edf2; border-radius: 6px; height: 12px;
+    margin-top: 12px; overflow: hidden; position: relative; }
+  .bar-fill { height: 100%; transition: width 0.5s ease; }
+  .bar-cutoff { position: absolute; top: -4px; width: 2px; height: 20px; background: #333; }
+  .helper { font-size: 12px; color: #888; margin-top: 4px; }
 </style>
 </head>
 <body>
-<div class="container">
-<h1>MTX Treatment Failure Risk Predictor</h1>
-<div class="tabs">
-<button class="tab active" onclick="showTab('d0', event)">D0 (Pre-treatment)</button>
-<button class="tab" onclick="showTab('d4', event)">D4 (Day 4)</button>
-<button class="tab" onclick="showTab('d7', event)">D7 (Day 7)</button>
+
+<h1>Dynamic Prediction of MTX Treatment Failure in Ectopic Pregnancy</h1>
+<div class="subtitle">LASSO-Logistic dynamic model at landmark time points D0 / D4 / D7</div>
+
+<div class="card">
+  <label for="time">Select landmark time point</label>
+  <select id="time" onchange="toggleInputs(); calc();">
+    <option value="D0">D0 (before treatment)</option>
+    <option value="D4">D4 (day 4)</option>
+    <option value="D7">D7 (day 7)</option>
+  </select>
+
+  <!-- D0 inputs -->
+  <div id="inputs-D0">
+    <label>Serum progesterone at D0 (ng/mL)</label>
+    <input id="prog" type="number" step="0.1" value="10">
+
+    <label>Serum β-hCG at D0 (mIU/mL)</label>
+    <input id="hcg_d0" type="number" step="1" value="2000">
+    <div class="helper">log10 transformation is applied automatically.</div>
+
+    <label>Maximum adnexal mass at D0 (mm)</label>
+    <input id="mass_d0" type="number" step="0.1" value="25">
+  </div>
+
+  <!-- D4 inputs -->
+  <div id="inputs-D4" style="display:none">
+    <label>Serum β-hCG at D0 (mIU/mL)</label>
+    <input id="hcg_d0_d4" type="number" step="1" value="2000">
+    <div class="helper">Used to compute absolute HCG slope D0→D4.</div>
+
+    <label>Serum β-hCG at D4 (mIU/mL)</label>
+    <input id="hcg_d4" type="number" step="1" value="1500">
+    <div class="helper">log10 and slope (HCG_D4 − HCG_D0)/4 are applied automatically.</div>
+
+    <label>Maximum adnexal mass at D4 (mm)</label>
+    <input id="mass_d4" type="number" step="0.1" value="24">
+  </div>
+
+  <!-- D7 inputs（已移除包块） -->
+  <div id="inputs-D7" style="display:none">
+    <label>Serum β-hCG at D4 (mIU/mL)</label>
+    <input id="hcg_d4_d7" type="number" step="1" value="1500">
+    <div class="helper">Used to compute HCG ratio D4→D7.</div>
+
+    <label>Serum β-hCG at D7 (mIU/mL)</label>
+    <input id="hcg_d7" type="number" step="1" value="800">
+    <div class="helper">log10 and ratio (HCG_D4 − HCG_D7)/HCG_D4 are applied automatically.</div>
+  </div>
+
+  <button onclick="calc()">Calculate predicted failure probability</button>
+  <div id="result"></div>
 </div>
 
-<!-- D0 Panel -->
-<div id="d0" class="panel active">
-<div class="form-group">
-<label>Progesterone (ng/mL)</label>
-<input type="number" id="d0_progesterone" step="0.01" placeholder="e.g., 7.03">
-</div>
-<div class="form-group">
-<label>log10 β-hCG (D0)</label>
-<input type="number" id="d0_log10_hcg" step="0.01" placeholder="e.g., 3.06">
-</div>
-<div class="form-group">
-<label>Maximum adnexal mass diameter (mm)</label>
-<input type="number" id="d0_mass" step="0.1" placeholder="e.g., 25">
-</div>
-<button onclick="predictD0()">Calculate Failure Risk</button>
-<div id="d0_result" class="result" style="display:none;"></div>
-</div>
-
-<!-- D4 Panel -->
-<div id="d4" class="panel">
-<div class="form-group">
-<label>log10 β-hCG (D4)</label>
-<input type="number" id="d4_log10_hcg" step="0.01" placeholder="e.g., 2.51">
-</div>
-<div class="form-group">
-<label>Absolute β-hCG slope D0→D4 (IU/L/day)</label>
-<input type="number" id="d4_slope" step="0.1" placeholder="e.g., -28.0">
-</div>
-<div class="form-group">
-<label>Maximum adnexal mass diameter (D4, mm)</label>
-<input type="number" id="d4_mass" step="0.1" placeholder="e.g., 23">
-</div>
-<button onclick="predictD4()">Calculate Failure Risk</button>
-<div id="d4_result" class="result" style="display:none;"></div>
-</div>
-
-<!-- D7 Panel -->
-<div id="d7" class="panel">
-<div class="form-group">
-<label>log10 β-hCG (D7)</label>
-<input type="number" id="d7_log10_hcg" step="0.01" placeholder="e.g., 2.36">
-</div>
-<div class="form-group">
-<label>Proportional hCG change D4→D7 (hcg_ratio_4_7)</label>
-<input type="number" id="d7_ratio" step="0.01" placeholder="e.g., 0.37">
-<div class="note">Formula: (hCG_D4 - hCG_D7) / hCG_D4</div>
-</div>
-<button onclick="predictD7()">Calculate Failure Risk</button>
-<div id="d7_result" class="result" style="display:none;"></div>
-</div>
-
-<div class="note">This tool is for clinical reference only. Clinical decisions should be based on individual patient circumstances.</div>
+<div class="note">
+  <b>Disclaimer:</b> This tool is intended for academic research and clinical decision support only.
+  It does not replace clinical judgment. Model coefficients were estimated from the current training
+  cohort; external validation is required before routine clinical use.
 </div>
 
 <script>
-// ============================================================
-// Model parameters (updated with latest logistic regression results)
-// ============================================================
-const MODELS = {
-  d0: {
+// ================================================================
+// MODEL COEFFICIENTS (updated with latest regression results)
+// D0: progesterone_d0, log10_hcg_d0, mass.max.D0
+// D4: log10_hcg_d4, mass.max.D4, abs_slope_hcg_D0_D4
+// D7: log10_hcg_d7, hcg_ratio_D4_D7 (no mass)
+// ================================================================
+const models = {
+  D0: {
     intercept: -12.94954,
-    coef: {
-      progesterone: 0.1277417,
-      log10_hcg: 3.183163,
+    coefs: {
+      prog: 0.1277417,
+      log10hcg: 3.183163,
       mass: 0.07473216
     },
     cutoff: 0.176
   },
-  d4: {
+  D4: {
     intercept: -10.24713,
-    coef: {
-      log10_hcg: 2.431874,
-      slope: 0.01005714,
-      mass: 0.06017084
+    coefs: {
+      log10hcg: 2.431874,
+      mass: 0.06017084,
+      absSlope: 0.01005714
     },
     cutoff: 0.312
   },
-  d7: {
+  D7: {
     intercept: -16.17956,
-    coef: {
-      log10_hcg: 5.297661,
-      ratio: -2.606817
+    coefs: {
+      log10hcg: 5.297661,
+      hcgRatio: -2.606817
     },
     cutoff: 0.299
   }
 };
 
-function showTab(tabId, event) {
-  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  document.getElementById(tabId).classList.add('active');
-  event.target.classList.add('active');
+function log10(x) { return Math.log10(x); }
+
+function toggleInputs() {
+  const t = document.getElementById("time").value;
+  ["D0", "D4", "D7"].forEach(x => {
+    document.getElementById("inputs-" + x).style.display = (x === t) ? "block" : "none";
+  });
 }
 
-function calcRisk(modelKey, values) {
-  const m = MODELS[modelKey];
-  let logit = m.intercept;
-  for (const [key, coef] of Object.entries(m.coef)) {
-    logit += coef * values[key];
+function calc() {
+  const t = document.getElementById("time").value;
+  const m = models[t];
+  const c = m.coefs;
+
+  const prog    = parseFloat(document.getElementById("prog").value) || 0;
+  const hcg_d0  = parseFloat(document.getElementById("hcg_d0").value) || 0;
+  const hcg_d0_d4 = parseFloat(document.getElementById("hcg_d0_d4").value) || 0;
+  const hcg_d4  = parseFloat(document.getElementById("hcg_d4").value) || 0;
+  const hcg_d4_d7 = parseFloat(document.getElementById("hcg_d4_d7").value) || 0;
+  const hcg_d7  = parseFloat(document.getElementById("hcg_d7").value) || 0;
+  const mass_d0 = parseFloat(document.getElementById("mass_d0").value) || 0;
+  const mass_d4 = parseFloat(document.getElementById("mass_d4").value) || 0;
+
+  let lp = m.intercept;
+
+  if (t === "D0") {
+    if (hcg_d0 <= 0) { alert("HCG at D0 must be positive."); return; }
+    lp += c.prog     * prog;
+    lp += c.log10hcg * log10(hcg_d0);
+    lp += c.mass     * mass_d0;
   }
-  const prob = 1 / (1 + Math.exp(-logit));
-  return { prob, cutoff: m.cutoff };
-}
+  else if (t === "D4") {
+    if (hcg_d4 <= 0 || hcg_d0_d4 <= 0) { alert("Both HCG values must be positive."); return; }
+    const absSlope = (hcg_d4 - hcg_d0_d4) / 4;
+    lp += c.log10hcg * log10(hcg_d4);
+    lp += c.mass     * mass_d4;
+    lp += c.absSlope * absSlope;
+  }
+  else if (t === "D7") {
+    if (hcg_d7 <= 0 || hcg_d4_d7 <= 0) { alert("Both HCG values must be positive."); return; }
+    const hcgRatio = (hcg_d4_d7 - hcg_d7) / hcg_d4_d7;
+    lp += c.log10hcg * log10(hcg_d7);
+    lp += c.hcgRatio * hcgRatio;
+  }
 
-function showResult(elementId, prob, cutoff) {
-  const el = document.getElementById(elementId);
-  el.style.display = 'block';
-  const percent = (prob * 100).toFixed(1);
-  if (prob >= cutoff) {
-    el.className = 'result high-risk';
-    el.innerHTML = `Predicted failure risk: ${percent}%<br>⚠️ High-risk group (≥ ${(cutoff * 100).toFixed(1)}%), consider intensified monitoring.`;
+  const p = 1 / (1 + Math.exp(-lp));
+  const pct = (p * 100).toFixed(1);
+
+  let cls, tier, advice;
+  if (p >= m.cutoff) {
+    cls = "result-high"; tier = "High risk";
+    advice = "Close monitoring recommended; consider a repeat MTX dose or surgical intervention.";
+  } else if (p >= m.cutoff * 0.6) {
+    cls = "result-intermediate"; tier = "Intermediate risk";
+    advice = "Intensified monitoring recommended; re-evaluate HCG and adnexal mass.";
   } else {
-    el.className = 'result low-risk';
-    el.innerHTML = `Predicted failure risk: ${percent}%<br>✅ Low-risk group (< ${(cutoff * 100).toFixed(1)}%), routine follow-up.`;
+    cls = "result-low"; tier = "Low risk";
+    advice = "Routine follow-up recommended.";
   }
+
+  const barColor = p >= m.cutoff ? "#d73027"
+                 : (p >= m.cutoff * 0.6 ? "#f0ad4e" : "#2e9e5b");
+  const cutoffPct = (m.cutoff * 100).toFixed(1);
+
+  const el = document.getElementById("result");
+  el.className = cls;
+  el.style.display = "block";
+  el.innerHTML = `
+    <div class="prob-number">Predicted failure probability: ${pct}%</div>
+    <div>Risk stratification: <b>${tier}</b> (Youden cutoff = ${cutoffPct}%)</div>
+    <div style="margin-top:8px">Recommendation: ${advice}</div>
+    <div class="bar-container">
+      <div class="bar-fill" style="width:${pct}%;background:${barColor}"></div>
+      <div class="bar-cutoff" style="left:${cutoffPct}%"></div>
+    </div>
+    <div style="font-size:12px;color:#666;margin-top:6px">Black vertical line = risk stratification cutoff</div>
+  `;
 }
 
-function predictD0() {
-  const values = {
-    progesterone: parseFloat(document.getElementById('d0_progesterone').value),
-    log10_hcg: parseFloat(document.getElementById('d0_log10_hcg').value),
-    mass: parseFloat(document.getElementById('d0_mass').value)
-  };
-  if (Object.values(values).some(isNaN)) { alert('Please fill in all fields'); return; }
-  const { prob, cutoff } = calcRisk('d0', values);
-  showResult('d0_result', prob, cutoff);
-}
-
-function predictD4() {
-  const values = {
-    log10_hcg: parseFloat(document.getElementById('d4_log10_hcg').value),
-    slope: parseFloat(document.getElementById('d4_slope').value),
-    mass: parseFloat(document.getElementById('d4_mass').value)
-  };
-  if (Object.values(values).some(isNaN)) { alert('Please fill in all fields'); return; }
-  const { prob, cutoff } = calcRisk('d4', values);
-  showResult('d4_result', prob, cutoff);
-}
-
-function predictD7() {
-  const values = {
-    log10_hcg: parseFloat(document.getElementById('d7_log10_hcg').value),
-    ratio: parseFloat(document.getElementById('d7_ratio').value)
-  };
-  if (Object.values(values).some(isNaN)) { alert('Please fill in all fields'); return; }
-  const { prob, cutoff } = calcRisk('d7', values);
-  showResult('d7_result', prob, cutoff);
-}
+toggleInputs();
 </script>
 </body>
 </html>
